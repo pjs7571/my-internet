@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CircuitAI Studio</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand"><span class="brand-mark">⚡</span><div><b>CircuitAI Studio</b><small>Tinkercad style web simulator</small></div></div>
+    <div class="toolbar">
+      <button class="tool-btn success" id="runBtn">▶ 시뮬레이션 시작</button>
+      <button class="tool-btn" id="stopBtn">■ 정지</button>
+      <button class="tool-btn" id="saveBtn">저장</button>
+      <button class="tool-btn" id="loadBtn">불러오기</button>
+      <button class="tool-btn" id="exportBtn">내보내기</button>
+      <label class="tool-btn file-label">가져오기<input type="file" id="importFile" accept="application/json" hidden></label>
+      <button class="tool-btn danger" id="clearBtn">전체삭제</button>
+      <button class="tool-btn primary" id="nav-ai-chat">✨ AI 도우미</button>
+    </div>
+  </nav>
+
+  <main class="app-container">
+    <aside class="component-sidebar">
+      <div class="sidebar-header"><select class="nav-select"><option>구성요소</option></select></div>
+      <div class="sidebar-search"><input id="componentSearch" type="text" placeholder="부품 검색: led, arduino, servo..." /></div>
+      <div class="component-grid" id="componentGrid">
+        <div class="component-item" draggable="true" data-type="resistor"><span>♒</span>저항</div>
+        <div class="component-item" draggable="true" data-type="potentiometer"><span>🎛️</span>가변저항</div>
+        <div class="component-item" draggable="true" data-type="led-red"><span>🔴</span>LED Red</div>
+        <div class="component-item" draggable="true" data-type="led-green"><span>🟢</span>LED Green</div>
+        <div class="component-item" draggable="true" data-type="led-blue"><span>🔵</span>LED Blue</div>
+        <div class="component-item" draggable="true" data-type="led-rgb"><span>🌈</span>RGB LED</div>
+        <div class="component-item" draggable="true" data-type="switch-push"><span>🔘</span>누름 버튼</div>
+        <div class="component-item" draggable="true" data-type="switch-slide"><span>🎚️</span>슬라이드 스위치</div>
+        <div class="component-item" draggable="true" data-type="battery-9v"><span>🔋</span>9V 배터리</div>
+        <div class="component-item" draggable="true" data-type="battery-3v"><span>🔋</span>3V 배터리</div>
+        <div class="component-item" draggable="true" data-type="battery-1.5v"><span>🔋</span>1.5V 배터리</div>
+        <div class="component-item" draggable="true" data-type="breadboard-small"><span>🎛️</span>브레드보드</div>
+        <div class="component-item" draggable="true" data-type="arduino"><span>♾️</span>Arduino Uno</div>
+        <div class="component-item" draggable="true" data-type="motor-dc"><span>⚙️</span>DC 모터</div>
+        <div class="component-item" draggable="true" data-type="motor-servo"><span>🔄</span>서보 모터</div>
+        <div class="component-item" draggable="true" data-type="buzzer"><span>🔊</span>부저</div>
+        <div class="component-item" draggable="true" data-type="multimeter"><span>📟</span>멀티미터</div>
+        <div class="component-item" draggable="true" data-type="oscilloscope"><span>📈</span>오실로스코프</div>
+        <div class="component-item" draggable="true" data-type="dc-source"><span>🔌</span>전원 공급</div>
+      </div>
+    </aside>
+
+    <section class="workspace-wrap">
+      <div class="workspace-topbar">
+        <span id="simStatus" class="status idle">정지됨</span>
+        <span id="electricInfo">전압/전류 계산 대기중</span>
+        <div class="zoom-controls"><button id="zoomOut">−</button><span id="zoomLabel">100%</span><button id="zoomIn">＋</button><button id="fitBtn">맞춤</button></div>
+      </div>
+      <div class="circuit-workspace" id="circuit-workspace">
+        <div id="world" class="world">
+          <svg id="wire-svg" class="wire-svg"></svg>
+          <div class="workspace-hint">부품을 끌어오고 핀을 클릭/드래그해서 선을 연결하세요.</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <h3>속성 / 코드</h3>
+      <div id="inspectorBody" class="inspector-body">부품을 선택하면 속성이 표시됩니다.<br><br>단축키: Delete 삭제, R 회전, Ctrl+D 복제, Esc 배선 취소</div>
+      <div class="code-panel">
+        <div class="code-title">Arduino 코드</div>
+        <textarea id="codeEditor">void setup() {
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(13, HIGH);
+}</textarea>
+        <button id="uploadCodeBtn" class="tool-btn primary full">코드 업로드/반영</button>
+        <p class="hint-mini">digitalWrite(핀, HIGH/LOW)을 인식해서 연결된 LED를 켭니다.</p>
+      </div>
+    </aside>
+  </main>
+
+  <div id="config-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="modal-title">설정</h3>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="modal-footer"><button id="modal-cancel" class="tool-btn">취소</button><button id="modal-save" class="tool-btn primary">확인</button></div>
+    </div>
+  </div>
+
+  <div id="chatbot-fab" class="chatbot-fab">💬</div>
+  <div id="chatbot-window" class="chatbot-window">
+    <div class="chat-header"><h3>AI 서킷 매니저</h3><button id="close-chat" class="close-btn">×</button></div>
+    <div id="chat-messages" class="chat-messages"></div>
+    <div class="chat-input-area"><input id="chat-input" placeholder="예: 아두이노 13번 LED 회로 만들어줘"><button id="chat-send">전송</button></div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
